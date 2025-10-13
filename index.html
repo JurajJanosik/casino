@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPŠIT CASINO</title>
+<!-- Chart.js pre graf -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --accent: #38bdf8;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  padding: 16px;
+  margin: 0;
+  max-width: 900px;
+  margin-inline: auto;
+}
+
+h1 {
+  text-align: center;
+  color: var(--accent);
+  font-size: 1.9rem;
+  margin-top: 0.5rem;
+}
+
+h2 { margin-bottom: 0.5rem; }
+
+.card {
+  background: var(--card);
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #334155;
+  color: white;
+  margin-top: 4px;
+  font-size: 1rem;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button.primary {
+  background: var(--accent);
+  color: black;
+}
+
+button.primary:hover { background: #67e8f9; }
+
+button.secondary {
+  background: transparent;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+}
+
+button.secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button.danger {
+  background: #ef4444;
+  color: white;
+}
+
+.player-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 0.8fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background: #334155;
+  margin: 14px 0;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  background: #334155;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+.entry {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+}
+
+small { color: var(--muted); }
+
+canvas {
+  width: 100%;
+  max-height: 300px;
+}
+</style>
+</head>
+<body>
+  <h1>🃏 SPŠIT CASINO</h1>
+
+  <section class="card">
+    <h2>Nové kolo</h2>
+    <div id="players"></div>
+    <button class="secondary" id="addPlayer">➕ Pridať hráča</button>
+    <hr>
+    <button class="primary" id="saveRound">💾 Uložiť kolo</button>
+  </section>
+
+  <section class="card">
+    <h2>História</h2>
+    <div id="history"></div>
+    <hr>
+    <div class="summary" id="summary"></div>
+    <hr>
+    <button class="secondary" id="exportCSV">☁️ Exportovať CSV</button>
+    <button class="danger" id="clearAll">Vymazať všetko</button>
+  </section>
+
+  <section class="card">
+    <h2>📊 Graf ziskov</h2>
+    <canvas id="chart"></canvas>
+  </section>
+
+<script>
+const KEY = "blackjack_rounds_v3";
+let chart = null;
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch { return []; }
+}
+function saveData(data) {
+  localStorage.setItem(KEY, JSON.stringify(data));
+  render();
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function addPlayerRow(name="", bet="", result="win") {
+  const div = document.createElement("div");
+  div.className = "player-row";
+  div.innerHTML = `
+    <input type="text" placeholder="Meno hráča" value="${name}">
+    <input type="number" step="0.01" placeholder="Stávka (€)" value="${bet}">
+    <select>
+      <option value="win" ${result=="win"?"selected":""}>Vyhral</option>
+      <option value="lose" ${result=="lose"?"selected":""}>Prehral</option>
+      <option value="push" ${result=="push"?"selected":""}>Remíza</option>
+    </select>
+    <button class="secondary remove">❌</button>
+  `;
+  div.querySelector(".remove").onclick = () => div.remove();
+  document.getElementById("players").appendChild(div);
+}
+
+function calculateResults(players) {
+  const results = [];
+  let dealerTotal = 0;
+  players.forEach(p => {
+    const bet = Number(p.bet) || 0;
+    let playerNet = 0;
+    if (p.result === "win") playerNet = bet;
+    else if (p.result === "lose") playerNet = -bet;
+    else playerNet = 0;
+    results.push({
+      id: uid(),
+      date: new Date().toLocaleString(),
+      player: p.name || "Neznámy",
+      bet,
+      result: p.result,
+      playerNet,
+      dealerNet: -playerNet
+    });
+    dealerTotal -= playerNet;
+  });
+  results.push({
+    id: uid(),
+    date: new Date().toLocaleString(),
+    player: "DEALER",
+    bet: "-",
+    result: "—",
+    playerNet: dealerTotal,
+    dealerNet: 0
+  });
+  return results;
+}
+
+function render() {
+  const data = loadData();
+  const histEl = document.getElementById("history");
+  const sumEl = document.getElementById("summary");
+  histEl.innerHTML = "";
+  sumEl.innerHTML = "";
+
+  if (data.length === 0) {
+    histEl.innerHTML = "<small>Žiadne záznamy.</small>";
+    if (chart) chart.destroy();
+    return;
+  }
+
+  data.slice().reverse().forEach(e => {
+    const el = document.createElement("div");
+    el.className = "entry";
+    el.innerHTML = `<div><strong>${e.player}</strong><br><small>${e.date}</small></div>
+                    <div style="text-align:right">
+                      <div><small>Stávka:</small> ${e.bet}</div>
+                      <div><small>Zisk:</small> ${e.playerNet}</div>
+                    </div>`;
+    histEl.appendChild(el);
+  });
+
+  // summary
+  const totals = {};
+  data.forEach(e => {
+    if (!totals[e.player]) totals[e.player] = 0;
+    totals[e.player] += e.playerNet;
+  });
+  Object.entries(totals).forEach(([name, val]) => {
+    const el = document.createElement("div");
+    el.className = "pill";
+    el.innerHTML = `<strong>${name}:</strong> ${val.toFixed(2)}€`;
+    sumEl.appendChild(el);
+  });
+
+  renderChart(totals);
+}
+
+function renderChart(totals) {
+  const ctx = document.getElementById("chart");
+  const players = Object.keys(totals).filter(n => n !== "DEALER");
+  const values = players.map(p => totals[p]);
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: players,
+      datasets: [{
+        label: "Zisk hráča (€)",
+        data: values,
+        backgroundColor: "#38bdf8",
+        borderRadius: 8
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
+
+// export CSV
+document.getElementById("exportCSV").onclick = () => {
+  const data = loadData();
+  if (!data.length) return alert("Žiadne dáta na export!");
+  const header = ["date","player","bet","result","playerNet","dealerNet"];
+  const rows = data.map(r => header.map(h => JSON.stringify(r[h] ?? "")).join(","));
+  const csv = [header.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "blackjack_data.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// Add first player by default
+addPlayerRow();
+
+document.getElementById("addPlayer").onclick = () => addPlayerRow();
+
+document.getElementById("saveRound").onclick = () => {
+  const rows = document.querySelectorAll("#players .player-row");
+  if (!rows.length) return alert("Pridaj aspoň jedného hráča!");
+  const players = Array.from(rows).map(r => ({
+    name: r.querySelector("input[type=text]").value.trim(),
+    bet: r.querySelector("input[type=number]").value,
+    result: r.querySelector("select").value
+  }));
+  const all = loadData();
+  const newEntries = calculateResults(players);
+  saveData([...all, ...newEntries]);
+  document.getElementById("players").innerHTML = "";
+  addPlayerRow();
+  alert("Kolo uložené ✅");
+};
+
+document.getElementById("clearAll").onclick = () => {
+  if (confirm("Naozaj chceš zmazať všetky záznamy?")) {
+    localStorage.removeItem(KEY);
+    render();
+  }
+};
+
+render();
+</script>
+</body>
+</html>
