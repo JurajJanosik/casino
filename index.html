@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SPŠIT CASINO</title>
-<!-- Chart.js pre graf -->
+<title>Blackjack</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
@@ -15,7 +14,6 @@
   --muted: #94a3b8;
   font-family: 'Inter', system-ui, sans-serif;
 }
-
 body {
   background: var(--bg);
   color: var(--text);
@@ -24,16 +22,7 @@ body {
   max-width: 900px;
   margin-inline: auto;
 }
-
-h1 {
-  text-align: center;
-  color: var(--accent);
-  font-size: 1.9rem;
-  margin-top: 0.5rem;
-}
-
-h2 { margin-bottom: 0.5rem; }
-
+h1 { text-align: center; color: var(--accent); margin-top: 0.5rem; }
 .card {
   background: var(--card);
   padding: 16px;
@@ -41,14 +30,6 @@ h2 { margin-bottom: 0.5rem; }
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   margin-bottom: 20px;
 }
-
-label {
-  display: block;
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-top: 8px;
-}
-
 input, select {
   width: 100%;
   padding: 10px;
@@ -59,7 +40,6 @@ input, select {
   margin-top: 4px;
   font-size: 1rem;
 }
-
 button {
   border: none;
   border-radius: 12px;
@@ -68,30 +48,13 @@ button {
   cursor: pointer;
   transition: all 0.2s;
 }
-
-button.primary {
-  background: var(--accent);
-  color: black;
-}
-
+button.primary { background: var(--accent); color: black; }
 button.primary:hover { background: #67e8f9; }
-
 button.secondary {
-  background: transparent;
-  border: 1px solid var(--muted);
-  color: var(--muted);
+  background: transparent; border: 1px solid var(--muted); color: var(--muted);
 }
-
-button.secondary:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-button.danger {
-  background: #ef4444;
-  color: white;
-}
-
+button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+button.danger { background: #ef4444; color: white; }
 .player-row {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr 0.8fr auto;
@@ -99,44 +62,16 @@ button.danger {
   align-items: center;
   margin-top: 10px;
 }
-
-hr {
-  border: none;
-  height: 1px;
-  background: #334155;
-  margin: 14px 0;
-}
-
-.summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.pill {
-  background: #334155;
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-size: 0.9rem;
-}
-
-.entry {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #334155;
-}
-
+hr { border: none; height: 1px; background: #334155; margin: 14px 0; }
+.summary { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { background: #334155; border-radius: 10px; padding: 6px 12px; font-size: 0.9rem; }
+.entry { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
 small { color: var(--muted); }
-
-canvas {
-  width: 100%;
-  max-height: 300px;
-}
+canvas { width: 100%; max-height: 300px; }
 </style>
 </head>
 <body>
-  <h1>🃏 SPŠIT CASINO</h1>
+  <h1>🃏 Blackjack SPŠIT</h1>
 
   <section class="card">
     <h2>Nové kolo</h2>
@@ -162,8 +97,9 @@ canvas {
   </section>
 
 <script>
-const KEY = "blackjack_rounds_v3";
+const KEY = "blackjack_rounds_v3_1";
 let chart = null;
+let savedPlayers = []; // tu budeme držať mená z posledného kola
 
 function loadData() {
   try { return JSON.parse(localStorage.getItem(KEY)) || []; }
@@ -173,7 +109,6 @@ function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
   render();
 }
-
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 function addPlayerRow(name="", bet="", result="win") {
@@ -231,13 +166,11 @@ function render() {
   const sumEl = document.getElementById("summary");
   histEl.innerHTML = "";
   sumEl.innerHTML = "";
-
   if (data.length === 0) {
     histEl.innerHTML = "<small>Žiadne záznamy.</small>";
     if (chart) chart.destroy();
     return;
   }
-
   data.slice().reverse().forEach(e => {
     const el = document.createElement("div");
     el.className = "entry";
@@ -248,8 +181,6 @@ function render() {
                     </div>`;
     histEl.appendChild(el);
   });
-
-  // summary
   const totals = {};
   data.forEach(e => {
     if (!totals[e.player]) totals[e.player] = 0;
@@ -261,38 +192,19 @@ function render() {
     el.innerHTML = `<strong>${name}:</strong> ${val.toFixed(2)}€`;
     sumEl.appendChild(el);
   });
-
   renderChart(totals);
 }
-
 function renderChart(totals) {
   const ctx = document.getElementById("chart");
   const players = Object.keys(totals).filter(n => n !== "DEALER");
   const values = players.map(p => totals[p]);
-
   if (chart) chart.destroy();
-
   chart = new Chart(ctx, {
     type: "bar",
-    data: {
-      labels: players,
-      datasets: [{
-        label: "Zisk hráča (€)",
-        data: values,
-        backgroundColor: "#38bdf8",
-        borderRadius: 8
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
+    data: { labels: players, datasets: [{ label: "Zisk hráča (€)", data: values, backgroundColor: "#38bdf8", borderRadius: 8 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
   });
 }
-
-// export CSV
 document.getElementById("exportCSV").onclick = () => {
   const data = loadData();
   if (!data.length) return alert("Žiadne dáta na export!");
@@ -308,9 +220,7 @@ document.getElementById("exportCSV").onclick = () => {
   URL.revokeObjectURL(url);
 };
 
-// Add first player by default
 addPlayerRow();
-
 document.getElementById("addPlayer").onclick = () => addPlayerRow();
 
 document.getElementById("saveRound").onclick = () => {
@@ -321,12 +231,14 @@ document.getElementById("saveRound").onclick = () => {
     bet: r.querySelector("input[type=number]").value,
     result: r.querySelector("select").value
   }));
+  savedPlayers = players.map(p => p.name).filter(n => n !== "");
   const all = loadData();
   const newEntries = calculateResults(players);
   saveData([...all, ...newEntries]);
+  // nové kolo: necháme mená, ale vyčistíme stávky
   document.getElementById("players").innerHTML = "";
-  addPlayerRow();
-  alert("Kolo uložené ✅");
+  savedPlayers.forEach(name => addPlayerRow(name, "", "win"));
+  alert("Kolo uložené ✅ – začína nové kolo!");
 };
 
 document.getElementById("clearAll").onclick = () => {
