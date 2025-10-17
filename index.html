@@ -55,6 +55,8 @@ button.secondary {
 }
 button.secondary:hover { border-color: var(--accent); color: var(--accent); }
 button.danger { background: #ef4444; color: white; }
+button.import { background: #16a34a; color: white; }
+button.import:hover { background: #22c55e; }
 
 .player-row {
   background: #1e293b;
@@ -66,6 +68,7 @@ button.danger { background: #ef4444; color: white; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
 }
 .bet-display {
   font-size: 1.1rem;
@@ -94,11 +97,11 @@ button.danger { background: #ef4444; color: white; }
 .chip:hover { transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.4); }
 
 /* Farby žetónov */
-.chip[data-val="0.05"] { background: #a855f7; } /* fialový */
-.chip[data-val="0.1"]  { background: #16a34a; } /* zelený */
-.chip[data-val="0.2"]  { background: #f97316; } /* oranžový */
-.chip[data-val="0.5"]  { background: #ef4444; } /* červený */
-.chip[data-val="1"]    { background: #3b82f6; } /* modrý */
+.chip[data-val="0.05"] { background: #a855f7; }
+.chip[data-val="0.1"]  { background: #16a34a; }
+.chip[data-val="0.2"]  { background: #f97316; }
+.chip[data-val="0.5"]  { background: #ef4444; }
+.chip[data-val="1"]    { background: #3b82f6; }
 
 hr { border: none; height: 1px; background: #334155; margin: 14px 0; }
 .summary { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -106,39 +109,84 @@ hr { border: none; height: 1px; background: #334155; margin: 14px 0; }
 .entry { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
 small { color: var(--muted); }
 canvas { width: 100%; max-height: 300px; }
+.split-options { display: none; gap: 4px; }
+.split-options.active { display: flex; flex-direction: column; }
+
+/* Split prepínač */
+.split-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+.split-toggle input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #475569;
+  transition: .3s;
+  border-radius: 34px;
+}
+.slider:before {
+  position: absolute;
+  content: "🎴";
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: .3s;
+}
+.split-toggle input:checked + .slider {
+  background-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+.split-toggle input:checked + .slider:before {
+  transform: translateX(22px);
+}
 </style>
 </head>
 <body>
-  <h1>🎰 Casino Pempin</h1>
+<h1>🎰 Casino Pempin</h1>
 
-  <section class="card">
-    <h2>Nové kolo</h2>
-    <div id="players"></div>
-    <button class="secondary" id="addPlayer">➕ Pridať hráča</button>
-    <hr>
-    <button class="primary" id="saveRound">💾 Uložiť kolo</button>
-  </section>
+<section class="card">
+  <h2>Nové kolo</h2>
+  <div id="players"></div>
+  <button class="secondary" id="addPlayer">➕ Pridať hráča</button>
+  <hr>
+  <button class="primary" id="saveRound">💾 Uložiť kolo</button>
+</section>
 
-  <section class="card">
-    <h2>História</h2>
-    <div id="history"></div>
-    <hr>
-    <div class="summary" id="summary"></div>
-    <hr>
-    <button class="secondary" id="exportCSV">☁️ Exportovať CSV</button>
-    <button class="danger" id="clearAll">Vymazať všetko</button>
-  </section>
+<section class="card">
+  <h2>História</h2>
+  <div id="history"></div>
+  <hr>
+  <div class="summary" id="summary"></div>
+  <hr>
+  <button class="secondary" id="exportCSV">☁️ Exportovať CSV</button>
+  <button class="danger" id="clearAll">Vymazať všetko</button>
+  <button class="import" id="importCSV">📥 Importovať CSV</button>
+  <input type="file" id="importFile" accept=".csv" style="display:none;">
+</section>
 
-  <section class="card">
-    <h2>📊 Graf ziskov</h2>
-    <canvas id="chart"></canvas>
-  </section>
+<section class="card">
+  <h2>📊 Graf ziskov</h2>
+  <canvas id="chart"></canvas>
+</section>
 
 <script>
-const KEY = "blackjack_rounds_v3_4";
+const KEY = "blackjack_rounds_v4";
 let chart = null;
 let savedPlayers = [];
+let lastBets = {};
 
+// --- Load / Save ---
 function loadData() {
   try { return JSON.parse(localStorage.getItem(KEY)) || []; }
   catch { return []; }
@@ -149,177 +197,191 @@ function saveData(data) {
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
+// --- Add Player UI ---
 function addPlayerRow(name="", bet=0, result="win") {
   const div = document.createElement("div");
   div.className = "player-row";
   div.innerHTML = `
     <div class="player-header">
       <input type="text" placeholder="Meno hráča" value="${name}">
-      <select>
+      <select class="main-result">
         <option value="win" ${result=="win"?"selected":""}>Vyhral</option>
         <option value="lose" ${result=="lose"?"selected":""}>Prehral</option>
         <option value="push" ${result=="push"?"selected":""}>Remíza</option>
       </select>
+      <label class="split-toggle">
+        <input type="checkbox" class="split-check">
+        <span class="slider"></span>
+      </label>
       <button class="secondary remove">❌</button>
+    </div>
+    <div class="split-options">
+      <select class="split1">
+        <option value="win">Split 1: Vyhral</option>
+        <option value="lose">Split 1: Prehral</option>
+        <option value="push">Split 1: Remíza</option>
+      </select>
+      <select class="split2">
+        <option value="win">Split 2: Vyhral</option>
+        <option value="lose">Split 2: Prehral</option>
+        <option value="push">Split 2: Remíza</option>
+      </select>
     </div>
     <div style="margin-top:6px;">
       <div class="bet-display">Stávka: <span class="bet-val">${bet.toFixed(2)}</span> €</div>
       <div class="bet-buttons">
-        ${[0.05,0.1,0.2,0.5,1].map(v => `<div class="chip" data-val="${v}">${v}</div>`).join("")}
+        ${[0.05,0.1,0.2,0.5,1].map(v=>`<div class="chip" data-val="${v}">${v}</div>`).join("")}
         <button class="secondary reset-bet">♻️ Nulovať</button>
+        <button class="secondary repeat-bet">🔁 Zopakovať</button>
       </div>
     </div>
   `;
-
   const betValEl = div.querySelector(".bet-val");
   let currentBet = bet;
-
-  div.querySelectorAll(".chip").forEach(chip => {
-    chip.onclick = () => {
+  div.querySelectorAll(".chip").forEach(chip=>{
+    chip.onclick=()=>{
       currentBet += parseFloat(chip.dataset.val);
       betValEl.textContent = currentBet.toFixed(2);
     };
   });
-
-  div.querySelector(".reset-bet").onclick = () => {
+  div.querySelector(".reset-bet").onclick = ()=>{
     currentBet = 0;
     betValEl.textContent = "0.00";
   };
-
-  div.querySelector(".remove").onclick = () => div.remove();
-
-  div.getBet = () => currentBet;
+  div.querySelector(".repeat-bet").onclick = ()=>{
+    const playerName = div.querySelector("input[type=text]").value.trim();
+    if(!playerName || !lastBets[playerName]) return alert("Nie je dostupná predchádzajúca stávka pre tohto hráča!");
+    currentBet = lastBets[playerName];
+    betValEl.textContent = currentBet.toFixed(2);
+  };
+  div.querySelector(".remove").onclick = ()=>div.remove();
+  const splitCheck = div.querySelector(".split-check");
+  const splitOptions = div.querySelector(".split-options");
+  splitCheck.onchange = ()=>splitOptions.classList.toggle("active", splitCheck.checked);
+  div.getBet = ()=>currentBet;
+  div.isSplit = ()=>splitCheck.checked;
+  div.getResults = ()=>splitCheck.checked
+    ? [div.querySelector(".split1").value, div.querySelector(".split2").value]
+    : [div.querySelector(".main-result").value];
   document.getElementById("players").appendChild(div);
 }
 
+// --- Calculate Results ---
 function calculateResults(players) {
   const results = [];
-  let dealerTotal = 0;
-  players.forEach(p => {
+  players.forEach(p=>{
     const bet = Number(p.bet) || 0;
-    let playerNet = 0;
-    if (p.result === "win") playerNet = bet;
-    else if (p.result === "lose") playerNet = -bet;
-    else playerNet = 0;
-    results.push({
-      id: uid(),
-      date: new Date().toLocaleString(),
-      player: p.name || "Neznámy",
-      bet,
-      result: p.result,
-      playerNet,
-      dealerNet: -playerNet
+    const dealerTotal = { total: 0 };
+    p.results.forEach((res,i)=>{
+      let actualBet = bet;
+      if(p.results.length>1) actualBet = bet; // split stávka
+      let playerNet = res==="win"?actualBet:res==="lose"?-actualBet:0;
+      dealerTotal.total -= playerNet;
+      results.push({
+        id: uid(), date: new Date().toLocaleString(),
+        player: p.results.length>1?`${p.name} (${i+1})`:p.name||"Neznámy",
+        bet: actualBet, result: res,
+        playerNet, dealerNet: -playerNet
+      });
     });
-    dealerTotal -= playerNet;
-  });
-  results.push({
-    id: uid(),
-    date: new Date().toLocaleString(),
-    player: "DEALER",
-    bet: "-",
-    result: "—",
-    playerNet: dealerTotal,
-    dealerNet: 0
+    results.push({
+      id: uid(), date: new Date().toLocaleString(),
+      player:"DEALER", bet:"-", result:"—",
+      playerNet: dealerTotal.total, dealerNet:0
+    });
   });
   return results;
 }
 
-function render() {
-  const data = loadData();
-  const histEl = document.getElementById("history");
-  const sumEl = document.getElementById("summary");
-  histEl.innerHTML = "";
-  sumEl.innerHTML = "";
-
-  if (data.length === 0) {
-    histEl.innerHTML = "<small>Žiadne záznamy.</small>";
-    if (chart) chart.destroy();
-    return;
-  }
-
-  data.slice().reverse().forEach(e => {
-    const el = document.createElement("div");
-    el.className = "entry";
-    el.innerHTML = `<div><strong>${e.player}</strong><br><small>${e.date}</small></div>
-                    <div style="text-align:right">
-                      <div><small>Stávka:</small> ${e.bet}</div>
-                      <div><small>Zisk:</small> ${e.playerNet}</div>
-                    </div>`;
+// --- Render ---
+function render(){
+  const data=loadData();
+  const histEl=document.getElementById("history");
+  const sumEl=document.getElementById("summary");
+  histEl.innerHTML=""; sumEl.innerHTML="";
+  if(data.length===0){ histEl.innerHTML="<small>Žiadne záznamy.</small>"; if(chart) chart.destroy(); return; }
+  data.slice().reverse().forEach(e=>{
+    const el=document.createElement("div"); el.className="entry";
+    el.innerHTML=`<div><strong>${e.player}</strong><br><small>${e.date}</small></div>
+    <div style="text-align:right"><div><small>Stávka:</small> ${e.bet}</div>
+    <div><small>Zisk:</small> ${e.playerNet}</div></div>`;
     histEl.appendChild(el);
   });
-
-  const totals = {};
-  data.forEach(e => {
-    if (!totals[e.player]) totals[e.player] = 0;
-    totals[e.player] += e.playerNet;
+  const totals={}, rounds={};
+  data.forEach(e=>{
+    if(e.player==="DEALER") return;
+    const name = e.player.replace(/\s*\(\d+\)$/, "");
+    if(!totals[name]){ totals[name]=0; rounds[name]=0; }
+    totals[name]+=Number(e.playerNet);
+    rounds[name]++;
   });
-
-  Object.entries(totals).forEach(([name, val]) => {
-    const el = document.createElement("div");
-    el.className = "pill";
-    el.innerHTML = `<strong>${name}:</strong> ${val.toFixed(2)} €`;
+  Object.entries(totals).forEach(([n,v])=>{
+    const el=document.createElement("div"); el.className="pill";
+    el.innerHTML=`<strong>${n}:</strong> ${v.toFixed(2)} € <br><small>Kôl: ${rounds[n]}</small>`;
     sumEl.appendChild(el);
   });
-
   renderChart(totals);
 }
-
-function renderChart(totals) {
-  const ctx = document.getElementById("chart");
-  const players = Object.keys(totals).filter(n => n !== "DEALER");
-  const values = players.map(p => totals[p]);
-
-  if (chart) chart.destroy();
-  chart = new Chart(ctx, {
-    type: "bar",
-    data: { labels: players, datasets: [{ label: "Zisk hráča (€)", data: values, backgroundColor: "#38bdf8", borderRadius: 8 }] },
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+function renderChart(totals){
+  const ctx=document.getElementById("chart");
+  const names=Object.keys(totals).filter(n=>n!=="DEALER");
+  const vals=names.map(n=>totals[n]);
+  if(chart)chart.destroy();
+  chart=new Chart(ctx,{
+    type:"bar",
+    data:{ labels:names, datasets:[{label:"Zisk hráča (€)", data:vals, backgroundColor:"#38bdf8", borderRadius:8}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
   });
 }
 
-document.getElementById("exportCSV").onclick = () => {
-  const data = loadData();
-  if (!data.length) return alert("Žiadne dáta na export!");
-  const header = ["date","player","bet","result","playerNet","dealerNet"];
-  const rows = data.map(r => header.map(h => JSON.stringify(r[h] ?? "")).join(","));
-  const csv = [header.join(","), ...rows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "blackjack_data.csv";
-  a.click();
-  URL.revokeObjectURL(url);
+// --- Export / Import CSV ---
+document.getElementById("exportCSV").onclick=()=>{
+  const data=loadData(); if(!data.length)return alert("Žiadne dáta na export!");
+  const header=["date","player","bet","result","playerNet","dealerNet"];
+  const rows=data.map(r=>header.map(h=>JSON.stringify(r[h]??"")).join(","));
+  const csv=[header.join(","),...rows].join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}); const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="blackjack_data.csv"; a.click(); URL.revokeObjectURL(url);
 };
+document.getElementById("importCSV").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").addEventListener("change", e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const lines=ev.target.result.split("\n").filter(l=>l.trim().length>1);
+      const header=lines.shift().split(",").map(h=>h.replace(/"/g,"").trim());
+      const rows=lines.map(l=>{
+        const vals=l.split(",").map(v=>v.replace(/^"|"$/g,""));
+        const obj={};
+        header.forEach((h,i)=>obj[h]=["bet","playerNet","dealerNet"].includes(h)?Number(vals[i]):vals[i]);
+        return obj;
+      });
+      const existing=loadData();
+      saveData([...existing,...rows]);
+      alert(`✅ Importovaných ${rows.length} záznamov!`);
+      e.target.value="";
+    }catch(err){ console.error(err); alert("❌ Chyba pri importe CSV."); }
+  };
+  reader.readAsText(file);
+});
 
+// --- Other actions ---
 addPlayerRow();
-document.getElementById("addPlayer").onclick = () => addPlayerRow();
-
-document.getElementById("saveRound").onclick = () => {
-  const rows = document.querySelectorAll("#players .player-row");
-  if (!rows.length) return alert("Pridaj aspoň jedného hráča!");
-  const players = Array.from(rows).map(r => ({
-    name: r.querySelector("input[type=text]").value.trim(),
-    bet: r.getBet(),
-    result: r.querySelector("select").value
-  }));
-  savedPlayers = players.map(p => p.name).filter(n => n !== "");
-  const all = loadData();
-  const newEntries = calculateResults(players);
-  saveData([...all, ...newEntries]);
-
-  document.getElementById("players").innerHTML = "";
-  savedPlayers.forEach(name => addPlayerRow(name, 0, "win"));
+document.getElementById("addPlayer").onclick=()=>addPlayerRow();
+document.getElementById("saveRound").onclick=()=>{
+  const rows=document.querySelectorAll("#players .player-row");
+  if(!rows.length)return alert("Pridaj aspoň jedného hráča!");
+  const players=Array.from(rows).map(r=>({name:r.querySelector("input[type=text]").value.trim(),bet:r.getBet(),results:r.getResults()}));
+  players.forEach(p=>{if(p.name)lastBets[p.name]=p.bet;});
+  savedPlayers=players.map(p=>p.name).filter(n=>n!=="");
+  const all=loadData(); const newEntries=calculateResults(players); saveData([...all,...newEntries]);
+  document.getElementById("players").innerHTML=""; savedPlayers.forEach(n=>addPlayerRow(n,0,"win"));
   alert("Kolo uložené ✅ – nové kolo pripravené!");
 };
-
-document.getElementById("clearAll").onclick = () => {
-  if (confirm("Naozaj chceš zmazať všetky záznamy?")) {
-    localStorage.removeItem(KEY);
-    render();
-  }
+document.getElementById("clearAll").onclick=()=>{
+  if(confirm("Naozaj chceš zmazať všetky záznamy?")){localStorage.removeItem(KEY); render();}
 };
-
 render();
 </script>
 </body>
