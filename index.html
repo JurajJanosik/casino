@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blackjack Tracker 3.3</title>
+<title>Casino Pempin</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
@@ -93,10 +93,12 @@ button.danger { background: #ef4444; color: white; }
 }
 .chip:hover { transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.4); }
 
-.chip[data-val="0.1"] { background: #16a34a; }  /* zelený */
-.chip[data-val="0.2"] { background: #f97316; }  /* oranžový */
-.chip[data-val="0.5"] { background: #ef4444; }  /* červený */
-.chip[data-val="1"]   { background: #3b82f6; }  /* modrý */
+/* Farby žetónov */
+.chip[data-val="0.05"] { background: #a855f7; } /* fialový */
+.chip[data-val="0.1"]  { background: #16a34a; } /* zelený */
+.chip[data-val="0.2"]  { background: #f97316; } /* oranžový */
+.chip[data-val="0.5"]  { background: #ef4444; } /* červený */
+.chip[data-val="1"]    { background: #3b82f6; } /* modrý */
 
 hr { border: none; height: 1px; background: #334155; margin: 14px 0; }
 .summary { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -107,7 +109,7 @@ canvas { width: 100%; max-height: 300px; }
 </style>
 </head>
 <body>
-  <h1>🎰 Blackjack Tracker SPŠ-IT</h1>
+  <h1>🎰 Blackjack Tracker 3.4</h1>
 
   <section class="card">
     <h2>Nové kolo</h2>
@@ -133,7 +135,7 @@ canvas { width: 100%; max-height: 300px; }
   </section>
 
 <script>
-const KEY = "blackjack_rounds_v3_3";
+const KEY = "blackjack_rounds_v3_4";
 let chart = null;
 let savedPlayers = [];
 
@@ -163,7 +165,7 @@ function addPlayerRow(name="", bet=0, result="win") {
     <div style="margin-top:6px;">
       <div class="bet-display">Stávka: <span class="bet-val">${bet.toFixed(2)}</span> €</div>
       <div class="bet-buttons">
-        ${[0.1,0.2,0.5,1].map(v => `<div class="chip" data-val="${v}">${v}</div>`).join("")}
+        ${[0.05,0.1,0.2,0.5,1].map(v => `<div class="chip" data-val="${v}">${v}</div>`).join("")}
         <button class="secondary reset-bet">♻️ Nulovať</button>
       </div>
     </div>
@@ -255,7 +257,7 @@ function render() {
   Object.entries(totals).forEach(([name, val]) => {
     const el = document.createElement("div");
     el.className = "pill";
-    el.innerHTML = `<strong>${name}:</strong> ${val.toFixed(2)}€`;
+    el.innerHTML = `<strong>${name}:</strong> ${val.toFixed(2)} €`;
     sumEl.appendChild(el);
   });
 
