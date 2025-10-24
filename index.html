@@ -4,189 +4,285 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Casino Pempin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
-  --bg: #0f172a;
-  --card: #1e293b;
+  --bg: #0b1220;
+  --bg-soft: #0e1527;
+  --card: #0f172a;
+  --card-2: #111a33;
   --accent: #38bdf8;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  font-family: 'Inter', system-ui, sans-serif;
+  --accent-2: #7dd3fc;
+  --text: #e6f0ff;
+  --muted: #9fb2d3;
+  --chip-ring: #ffffffaa;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
 }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(900px 500px at 15% -20%, #1ef6ff22 0%, transparent 60%),
+    radial-gradient(1000px 650px at 110% 10%, #7c3aed22 0%, transparent 55%),
+    linear-gradient(180deg,#0a0f1d 0%,#0a1124 60%,#0a1124 100%);
   color: var(--text);
-  padding: 16px;
+  padding: 24px;
   margin: 0;
-  max-width: 900px;
+  max-width: 1100px;
   margin-inline: auto;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',system-ui,sans-serif;
 }
-h1 { text-align: center; color: var(--accent); margin-top: 0.5rem; }
-.card {
-  background: var(--card);
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  margin-bottom: 20px;
+.header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-input, select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: #334155;
-  color: white;
-  margin-top: 4px;
-  font-size: 1rem;
+.brand {
+  display: flex; align-items: center; gap: 12px;
 }
+.logo {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: radial-gradient(circle at 30% 30%, #1ef6ff 0%, #0ea5e9 25%, #2563eb 60%, #0b1220 100%);
+  box-shadow: inset 0 0 18px #ffffff33, 0 0 30px #38bdf855, 0 10px 30px #0009;
+  display:flex; align-items:center; justify-content:center;
+  font-weight: 800; color: #00111a; text-shadow: 0 1px 0 #fff8;
+}
+.title { margin: 0; font-size: 28px; letter-spacing: 0.5px; }
+.subtitle { margin: 0; color: var(--muted); font-size: 13px; }
+
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
 button {
-  border: none;
-  border-radius: 12px;
-  padding: 8px 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  border: none; border-radius: 12px; padding: 10px 14px; font-weight: 600; cursor: pointer; transition: transform .08s ease, box-shadow .2s ease, background .2s ease; backdrop-filter: blur(8px);
 }
-button.primary { background: var(--accent); color: black; }
-button.primary:hover { background: #67e8f9; }
-button.secondary {
-  background: transparent; border: 1px solid var(--muted); color: var(--muted);
-}
+button:active { transform: translateY(1px) scale(0.99); }
+button.primary { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%); color: #06121a; box-shadow: 0 6px 14px #38bdf875; }
+button.primary:hover { filter: brightness(1.05); }
+button.secondary { background: #0c162b; color: var(--muted); border: 1px solid #284063; }
 button.secondary:hover { border-color: var(--accent); color: var(--accent); }
-button.danger { background: #ef4444; color: white; }
-button.import { background: #16a34a; color: white; }
-button.import:hover { background: #22c55e; }
+button.danger { background: linear-gradient(180deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 6px 20px #ef444444; }
+button.import { background: linear-gradient(180deg, #16a34a, #15803d); color: white; }
 
-.player-row {
-  background: #1e293b;
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 10px;
+.main {
+  margin-top: 20px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px;
 }
-.player-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
+@media (max-width: 980px) { .main { grid-template-columns: 1fr; } }
+
+.card {
+  background: linear-gradient(180deg, #0b1428cc, #0b1428dd);
+  padding: 16px; border-radius: 16px; box-shadow: 0 12px 30px #0008, inset 0 1px 0 #ffffff10;
+  border: 1px solid #1f2b4a; position: relative; overflow: hidden;
 }
-.bet-display {
-  font-size: 1.1rem;
-  color: var(--accent);
-  font-weight: bold;
-}
-.bet-buttons {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
+.card h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: .3px; }
+.card .hint { color: var(--muted); font-size: 12px; }
+hr { border: none; height: 1px; background: #1c2a4a; margin: 14px 0; }
+
+/* Player row */
+.player-row { background: #0c152b; border-radius: 14px; padding: 12px; margin-top: 10px; border: 1px solid #203055; box-shadow: inset 0 1px 0 #ffffff0f; }
+.player-header { display: grid; grid-template-columns: 1fr 150px 60px 40px; gap: 8px; align-items: center; }
+input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #23365e; background: #0a1224; color: white; font-size: 0.95rem; outline: none; }
+input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #38bdf821; }
+
+.bet-display { font-size: 1rem; color: var(--accent); font-weight: 700; }
+.bet-buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .chip {
-  border-radius: 50%;
-  width: 46px;
-  height: 46px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  cursor: pointer;
-  border: 2px solid white;
-  color: white;
-  transition: transform 0.1s, box-shadow 0.1s;
+  border-radius: 24px; min-width: 56px; height: 40px; padding: 0 12px; display: inline-flex; justify-content: center; align-items: center;
+  font-weight: 800; cursor: pointer; border: 2px solid var(--chip-ring); color: white; user-select: none;
+  box-shadow: 0 4px 10px #0007; transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
 }
-.chip:hover { transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.4); }
-
-/* Farby žetónov */
+.chip:hover { transform: translateY(-1px); filter: brightness(1.06); }
 .chip[data-val="0.05"] { background: #a855f7; }
 .chip[data-val="0.1"]  { background: #16a34a; }
 .chip[data-val="0.2"]  { background: #f97316; }
 .chip[data-val="0.5"]  { background: #ef4444; }
 .chip[data-val="1"]    { background: #3b82f6; }
 
-hr { border: none; height: 1px; background: #334155; margin: 14px 0; }
-.summary { display: flex; flex-wrap: wrap; gap: 8px; }
-.pill { background: #334155; border-radius: 10px; padding: 6px 12px; font-size: 0.9rem; }
-.entry { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
-small { color: var(--muted); }
-canvas { width: 100%; max-height: 300px; }
-.split-options { display: none; gap: 4px; }
-.split-options.active { display: flex; flex-direction: column; }
+.split-options { display: none; gap: 6px; }
+.split-options.active { display: grid; grid-template-columns: 1fr 1fr; margin-top: 8px; }
 
-/* Split prepínač */
-.split-toggle {
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 26px;
-}
+/* Split toggle */
+.split-toggle { position: relative; display: inline-block; width: 48px; height: 26px; }
 .split-toggle input { opacity: 0; width: 0; height: 0; }
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #475569;
-  transition: .3s;
-  border-radius: 34px;
-}
-.slider:before {
-  position: absolute;
-  content: "🎴";
-  height: 22px;
-  width: 22px;
-  left: 2px;
-  bottom: 2px;
-  background-color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  transition: .3s;
-}
-.split-toggle input:checked + .slider {
-  background-color: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
-}
-.split-toggle input:checked + .slider:before {
-  transform: translateX(22px);
+.slider { position: absolute; cursor: pointer; inset: 0; background: #172646; border-radius: 34px; transition: .25s; box-shadow: inset 0 2px 8px #0008; }
+.slider:before { position: absolute; content: "🎴"; height: 22px; width: 22px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; display: grid; place-items: center; font-size: 14px; transition: .25s; box-shadow: 0 3px 8px #0008; }
+.split-toggle input:checked + .slider { background: linear-gradient(45deg, var(--accent), #60a5fa); box-shadow: 0 0 12px var(--accent); }
+.split-toggle input:checked + .slider:before { transform: translateX(22px); }
+
+.summary { display: flex; flex-wrap: wrap; gap: 10px; }
+.pill { background: #0b1429; border: 1px solid #22345c; border-radius: 12px; padding: 10px 12px; font-size: 0.92rem; box-shadow: inset 0 1px 0 #ffffff10; }
+.pill .name { font-weight: 700; margin-right: 6px; }
+.pill small { color: var(--muted); display: block; margin-top: 4px; font-size: 12px; }
+
+/* Dealer special pill */
+.pill.dealer { background: linear-gradient(180deg, #ef4444, #b91c1c); color: #fff; border: 1px solid #fecaca33; box-shadow: 0 10px 22px #ef444433, inset 0 1px 0 #ffffff33; }
+.pill.dealer .name { color: #fff; }
+.pill.positive { border-color: #16a34a66; }
+.pill.negative { border-color: #ef444466; }
+
+.history-header { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+#toggleHistory { padding: 8px 12px; }
+
+.entry { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #21355e; }
+.entry:last-child { border-bottom: none; }
+.entry small { color: var(--muted); }
+canvas { width: 100%; max-height: 320px; }
+
+.badge { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#dbeafe; padding:6px 10px; border:1px solid #214070; background:#0a1730; border-radius:999px; }
+.badge .dot { width:8px; height:8px; border-radius:50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+.footer-note { color: var(--muted); font-size: 12px; margin-top: 6px; }
+/* ==== Animated background (card suits bokeh) ==== */
+.bg-anim { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.bg-anim span { position: absolute; font-size: clamp(28px, 5vw, 76px); opacity: 0.07; filter: blur(2px); transform: translate(-50%, -50%) scale(1); animation: floatSuit linear infinite; color: #dbeafe; text-shadow: 0 0 30px #7dd3fc33, 0 0 60px #38bdf833; }
+.bg-anim span.heart, .bg-anim span.diamond { color: #fecaca; text-shadow: 0 0 30px #fecaca33, 0 0 60px #f8717133; }
+@keyframes floatSuit { from { transform: translate(var(--x), var(--y)) scale(1) rotate(0deg); } to { transform: translate(calc(var(--x) + var(--dx)), calc(var(--y) + var(--dy))) scale(1.08) rotate(var(--rot)); } }
+
+/* ==== Header clock + name day (H3 layout) ==== */
+.header-info { display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
+.header-info .datetime { font-weight: 700; letter-spacing: .3px; font-size: 14px; }
+.header-info .nameday { color: var(--muted); font-size: 12px; }
+
+/* Neon bands + pulse */
+.bg-anim::before,.bg-anim::after{content:"";position:fixed;inset:0;pointer-events:none;mix-blend-mode:screen;}
+.bg-anim::before{background:linear-gradient(60deg,transparent 0%,#38bdf822 40%,transparent 80%);animation:pulse 6s ease-in-out infinite;}
+.bg-anim::after{background:linear-gradient(-40deg,transparent 10%,#7c3aed22 50%,transparent 90%);animation:pulse 9s ease-in-out infinite reverse;}
+@keyframes pulse{0%,100%{opacity:.05}50%{opacity:.18}}
+/* Print styles for nice PDF */
+@media print {
+  body { background: #fff !important; color: #111 !important; max-width: 100%; padding: 0; }
+  .bg-anim { display: none !important; }
+  .card { box-shadow: none !important; border: 1px solid #ddd !important; background: #fff !important; }
+  .title, .subtitle { color: #111 !important; }
+  .pill { border-color: #bbb !important; color:#111 !important; }
+  .pill.dealer { background: #fdd; color:#900 !important; border-color:#f99 !important; }
+  button, .toolbar, #toggleHistory { display: none !important; }
 }
 </style>
 </head>
 <body>
-<h1>🎰 Casino Pempin</h1>
+  <div class="bg-anim" aria-hidden="true"></div>
+  <header class="header">
+    <div class="brand">
+      <div class="logo">CP</div>
+      <div>
+        <h1 class="title">Casino Pempin</h1>
+        <p class="subtitle">Blackjack tracker • modern redesign</p>
+      </div>
+    </div>
+    <div class="header-info">
+      <div class="datetime" id="datetime">--.--.---- • --:--:--</div>
+      <div class="nameday" id="nameday">Meniny: —</div>
+    </div>
+    <div class="toolbar">
+      <button class="secondary" id="ambientToggle" title="Ambient zvuky ON/OFF">🎧 Ambient OFF</button>
+      <button class="secondary" id="fullscreenToggle" title="Fullscreen režim">⛶ Fullscreen</button>
+      <button class="secondary" id="exportPDF" title="Export do PDF">🧾 Export PDF</button>
+      <button class="secondary" id="exportCSV">☁️ Exportovať CSV</button>
+      <button class="import" id="importCSV">📥 Importovať CSV</button>
+      <input type="file" id="importFile" accept=".csv" style="display:none;">
+      <button class="danger" id="clearAll">🗑️ Vymazať všetko</button>
+    </div>
+  </header>
 
-<section class="card">
-  <h2>Nové kolo</h2>
-  <div id="players"></div>
-  <button class="secondary" id="addPlayer">➕ Pridať hráča</button>
-  <hr>
-  <button class="primary" id="saveRound">💾 Uložiť kolo</button>
-</section>
+  <main class="main">
+    <section class="card">
+      <h2>Nové kolo</h2>
+      <p class="hint">Pridaj hráčov, nastav výsledky a stávky pomocou žetónov. Split zapneš prepínačom 🎴.</p>
+      <div id="players"></div>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button class="secondary" id="addPlayer">➕ Pridať hráča</button>
+        <button class="primary" id="saveRound">💾 Uložiť kolo</button>
+      </div>
+      <p class="footer-note">Stávkové žetóny: 0.05 • 0.10 • 0.20 • 0.50 • 1.00 €</p>
+    </section>
 
-<section class="card">
-  <h2>História</h2>
-  <div id="history"></div>
-  <hr>
-  <div class="summary" id="summary"></div>
-  <hr>
-  <button class="secondary" id="exportCSV">☁️ Exportovať CSV</button>
-  <button class="danger" id="clearAll">Vymazať všetko</button>
-  <button class="import" id="importCSV">📥 Importovať CSV</button>
-  <input type="file" id="importFile" accept=".csv" style="display:none;">
-</section>
+    <section class="card">
+      <div class="history-header">
+        <h2>História</h2>
+        <span class="badge"><span class="dot"></span> <span id="roundCount">0 kôl</span></span>
+      </div>
+      <div id="history"></div>
+      <hr>
+      <div class="summary" id="summary"></div>
+      <div id="dealerStats" class="footer-note" style="margin-top:8px;"></div>
+      <hr>
+      <button class="secondary" id="toggleHistory">▼ Zobraziť celú históriu</button>
+    </section>
 
-<section class="card">
-  <h2>📊 Graf ziskov</h2>
-  <canvas id="chart"></canvas>
-</section>
+    <section class="card" style="grid-column: 1 / -1;">
+      <h2>📊 Graf ziskov</h2>
+      <canvas id="chart"></canvas>
+    </section>
+  </main>
 
 <script>
-const KEY = "blackjack_rounds_v4";
-let chart = null;
-let savedPlayers = [];
-let lastBets = {};
+// ===== Constants & State =====
+// Create background floating suits (soft bokeh vibe)
+(function initBackground() {
+  const container = document.querySelector('.bg-anim');
+  if (!container) return;
+  const suits = ['♠','♥','♦','♣'];
+  const classes = ['spade','heart','diamond','club'];
+  const howMany = 18; // subtle
+  for (let i = 0; i < howMany; i++) {
+    const s = document.createElement('span');
+    const idx = Math.floor(Math.random()*4);
+    s.textContent = suits[idx];
+    if (classes[idx] === 'heart') s.classList.add('heart');
+    if (classes[idx] === 'diamond') s.classList.add('diamond');
+    const startX = Math.random()*100; // vw
+    const startY = Math.random()*100; // vh
+    const dx = (Math.random()*30 - 15); // move range
+    const dy = (Math.random()*40 - 20);
+    const rot = (Math.random()*120 - 60) + 'deg';
+    const dur = 30 + Math.random()*35; // 30–65s
+    s.style.setProperty('--x', startX + 'vw');
+    s.style.setProperty('--y', startY + 'vh');
+    s.style.setProperty('--dx', dx + 'vw');
+    s.style.setProperty('--dy', dy + 'vh');
+    s.style.setProperty('--rot', rot);
+    s.style.animationDuration = dur + 's';
+    s.style.animationDelay = (-Math.random()*dur) + 's';
+    container.appendChild(s);
+  }
+})();
 
-// --- Load / Save ---
+// Live datetime + Slovak nameday (SK)
+(function initClockAndNameday(){
+  const dtEl = document.getElementById('datetime');
+  const ndEl = document.getElementById('nameday');
+  function pad(n){ return n.toString().padStart(2,'0'); }
+  function formatDate(d){ return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`; }
+  function formatTime(d){ return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+  function tick(){ const now = new Date(); dtEl.textContent = `${formatDate(now)} • ${formatTime(now)}`; }
+  tick(); setInterval(tick, 1000);
+
+  // Offline SK namedays
+const SK_NAMEDAYS={"1-24":"Timotej","10-24":"Kvetoslava","12-24":"Adam a Eva"};
+(function setOfflineNameday(){
+ const d=new Date();const k=`${d.getMonth()+1}-${d.getDate()}`;
+ const name=SK_NAMEDAYS[k]||"—";
+ document.getElementById('nameday').textContent=`Meniny: ${name}`;
+})();
+})();
+
+// ===== Constants & State =====
+const KEY = "blackjack_rounds_v5"; // storage key bump
+let chart = null;
+let lastBets = {}; // name -> betCents
+let historyExpanded = false; // toggler
+
+// ===== Utils: precise money in cents =====
+const toCents = (x) => Math.round((Number(x) + Number.EPSILON) * 100);
+const fromCents = (c) => c / 100;
+const fmt = (x) => fromCents(toCents(x)).toFixed(2); // robust print
+
+// Local time string
+const ts = () => new Date().toLocaleString();
+
+// Storage helpers
 function loadData() {
   try { return JSON.parse(localStorage.getItem(KEY)) || []; }
   catch { return []; }
@@ -197,8 +293,8 @@ function saveData(data) {
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
-// --- Add Player UI ---
-function addPlayerRow(name="", bet=0, result="win") {
+// ===== UI: Add Player Row =====
+function addPlayerRow(name = "", betCents = 0, result = "win") {
   const div = document.createElement("div");
   div.className = "player-row";
   div.innerHTML = `
@@ -213,7 +309,7 @@ function addPlayerRow(name="", bet=0, result="win") {
         <input type="checkbox" class="split-check">
         <span class="slider"></span>
       </label>
-      <button class="secondary remove">❌</button>
+      <button class="secondary remove" title="Odstrániť hráča">✖</button>
     </div>
     <div class="split-options">
       <select class="split1">
@@ -228,7 +324,7 @@ function addPlayerRow(name="", bet=0, result="win") {
       </select>
     </div>
     <div style="margin-top:6px;">
-      <div class="bet-display">Stávka: <span class="bet-val">${bet.toFixed(2)}</span> €</div>
+      <div class="bet-display">Stávka: <span class="bet-val">${(betCents/100).toFixed(2)}</span> €</div>
       <div class="bet-buttons">
         ${[0.05,0.1,0.2,0.5,1].map(v=>`<div class="chip" data-val="${v}">${v}</div>`).join("")}
         <button class="secondary reset-bet">♻️ Nulovať</button>
@@ -236,152 +332,331 @@ function addPlayerRow(name="", bet=0, result="win") {
       </div>
     </div>
   `;
+
   const betValEl = div.querySelector(".bet-val");
-  let currentBet = bet;
-  div.querySelectorAll(".chip").forEach(chip=>{
-    chip.onclick=()=>{
-      currentBet += parseFloat(chip.dataset.val);
-      betValEl.textContent = currentBet.toFixed(2);
+  let currentBetCents = betCents;
+
+  div.querySelectorAll(".chip").forEach(chip => {
+    chip.onclick = () => {
+      currentBetCents += toCents(chip.dataset.val);
+      betValEl.textContent = (currentBetCents/100).toFixed(2);
     };
   });
-  div.querySelector(".reset-bet").onclick = ()=>{
-    currentBet = 0;
+  div.querySelector(".reset-bet").onclick = () => {
+    currentBetCents = 0;
     betValEl.textContent = "0.00";
   };
-  div.querySelector(".repeat-bet").onclick = ()=>{
+  div.querySelector(".repeat-bet").onclick = () => {
     const playerName = div.querySelector("input[type=text]").value.trim();
-    if(!playerName || !lastBets[playerName]) return alert("Nie je dostupná predchádzajúca stávka pre tohto hráča!");
-    currentBet = lastBets[playerName];
-    betValEl.textContent = currentBet.toFixed(2);
+    if (!playerName || lastBets[playerName] == null) return alert("Nie je dostupná predchádzajúca stávka pre tohto hráča!");
+    currentBetCents = Number(lastBets[playerName]);
+    betValEl.textContent = (currentBetCents/100).toFixed(2);
   };
-  div.querySelector(".remove").onclick = ()=>div.remove();
+  div.querySelector(".remove").onclick = () => div.remove();
+
   const splitCheck = div.querySelector(".split-check");
   const splitOptions = div.querySelector(".split-options");
-  splitCheck.onchange = ()=>splitOptions.classList.toggle("active", splitCheck.checked);
-  div.getBet = ()=>currentBet;
-  div.isSplit = ()=>splitCheck.checked;
-  div.getResults = ()=>splitCheck.checked
+  splitCheck.onchange = () => splitOptions.classList.toggle("active", splitCheck.checked);
+
+  // expose getters
+  div.getBetCents = () => currentBetCents;
+  div.isSplit = () => splitCheck.checked;
+  div.getResults = () => splitCheck.checked
     ? [div.querySelector(".split1").value, div.querySelector(".split2").value]
     : [div.querySelector(".main-result").value];
+
   document.getElementById("players").appendChild(div);
 }
 
-// --- Calculate Results ---
+// ===== Core: Calculate Results (no dealer rows, dealer aggregated per round) =====
 function calculateResults(players) {
-  const results = [];
-  players.forEach(p=>{
-    const bet = Number(p.bet) || 0;
-    const dealerTotal = { total: 0 };
-    p.results.forEach((res,i)=>{
-      let actualBet = bet;
-      if(p.results.length>1) actualBet = bet; // split stávka
-      let playerNet = res==="win"?actualBet:res==="lose"?-actualBet:0;
-      dealerTotal.total -= playerNet;
-      results.push({
-        id: uid(), date: new Date().toLocaleString(),
-        player: p.results.length>1?`${p.name} (${i+1})`:p.name||"Neznámy",
-        bet: actualBet, result: res,
-        playerNet, dealerNet: -playerNet
+  const entries = [];
+  let dealerCents = 0; // dealer net for the whole round in cents
+
+  players.forEach(p => {
+    const baseBet = Number(p.betCents) || 0; // in cents
+    const hands = p.results.length;
+
+    p.results.forEach((res, i) => {
+      const betCents = baseBet; // for split we assume same stake per hand (as app logic)
+      let playerNetCents = 0;
+      if (res === 'win') playerNetCents = betCents;
+      else if (res === 'lose') playerNetCents = -betCents;
+      else playerNetCents = 0; // push
+
+      dealerCents -= playerNetCents; // dealer is opposite of player result
+
+      entries.push({
+        id: uid(),
+        type: 'PLAY',
+        date: ts(),
+        player: (hands > 1 ? `${p.name || 'Neznámy'} (${i+1})` : (p.name || 'Neznámy')),
+        bet: (betCents/100), // store as number in €
+        result: res,
+        playerNet: (playerNetCents/100),
       });
     });
-    results.push({
-      id: uid(), date: new Date().toLocaleString(),
-      player:"DEALER", bet:"-", result:"—",
-      playerNet: dealerTotal.total, dealerNet:0
-    });
   });
-  return results;
+
+  // push a round-end marker with dealer aggregation
+  entries.push({
+    id: uid(),
+    type: 'ROUND_END',
+    date: ts(),
+    dealerNet: (dealerCents/100), // number in €
+  });
+
+  return entries;
 }
 
-// --- Render ---
-function render(){
-  const data=loadData();
-  const histEl=document.getElementById("history");
-  const sumEl=document.getElementById("summary");
-  histEl.innerHTML=""; sumEl.innerHTML="";
-  if(data.length===0){ histEl.innerHTML="<small>Žiadne záznamy.</small>"; if(chart) chart.destroy(); return; }
-  data.slice().reverse().forEach(e=>{
-    const el=document.createElement("div"); el.className="entry";
-    el.innerHTML=`<div><strong>${e.player}</strong><br><small>${e.date}</small></div>
-    <div style="text-align:right"><div><small>Stávka:</small> ${e.bet}</div>
-    <div><small>Zisk:</small> ${e.playerNet}</div></div>`;
+// ===== Render =====
+function render() {
+  const data = loadData();
+  const histEl = document.getElementById('history');
+  const sumEl = document.getElementById('summary');
+  const roundCountEl = document.getElementById('roundCount');
+  histEl.innerHTML = ''; sumEl.innerHTML = '';
+
+  if (data.length === 0) {
+    histEl.innerHTML = '<small>Žiadne záznamy.</small>';
+    roundCountEl.textContent = '0 kôl';
+    if (chart) chart.destroy();
+    return;
+  }
+
+  // Split data by rounds
+  const rounds = [];
+  let currentRound = [];
+  data.forEach(rec => {
+    currentRound.push(rec);
+    if (rec.type === 'ROUND_END') {
+      rounds.push(currentRound);
+      currentRound = [];
+    }
+  });
+  if (currentRound.length) rounds.push(currentRound); // in case of old data without marker
+
+  const totalRounds = rounds.filter(r => r.some(x => x.type === 'ROUND_END')).length;
+  roundCountEl.textContent = `${totalRounds} ${totalRounds===1? 'kolo':'kôl'}`;
+
+  // Choose which records to render: last round or all
+  let recordsToShow = [];
+  if (!historyExpanded) {
+    // last round that contains ROUND_END
+    for (let i = rounds.length - 1; i >= 0; i--) {
+      const r = rounds[i];
+      if (r.some(x => x.type === 'ROUND_END')) { recordsToShow = r; break; }
+    }
+    if (recordsToShow.length === 0) recordsToShow = rounds[rounds.length - 1] || [];
+  } else {
+    recordsToShow = data; // all
+  }
+
+  // Render history list (skip ROUND_END visual rows)
+  const visible = recordsToShow.filter(e => e.type !== 'ROUND_END');
+  visible.slice().reverse().forEach(e => {
+    const el = document.createElement('div'); el.className = 'entry';
+    el.innerHTML = `
+      <div><strong>${e.player}</strong><br><small>${e.date}</small></div>
+      <div style="text-align:right">
+        <div><small>Stávka:</small> ${typeof e.bet==='number' ? e.bet.toFixed(2) : '-'}</div>
+        <div><small>Zisk:</small> ${(typeof e.playerNet==='number' ? e.playerNet : 0).toFixed(2)}</div>
+      </div>`;
     histEl.appendChild(el);
   });
-  const totals={}, rounds={};
-  data.forEach(e=>{
-    if(e.player==="DEALER") return;
-    const name = e.player.replace(/\s*\(\d+\)$/, "");
-    if(!totals[name]){ totals[name]=0; rounds[name]=0; }
-    totals[name]+=Number(e.playerNet);
-    rounds[name]++;
+
+  // Build totals by player + dealer
+  const totals = {}; // playerName -> cents
+  const roundsCountByPlayer = {}; // for players only
+  let dealerTotalCents = 0;
+
+  data.forEach(e => {
+    if (e.type === 'PLAY') {
+      const name = e.player.replace(/\s*\(\d+\)$/, '');
+      if (!totals[name]) { totals[name] = 0; roundsCountByPlayer[name] = 0; }
+      totals[name] += toCents(e.playerNet);
+      roundsCountByPlayer[name] += 1; // counts hands, not rounds
+    }
+    if (e.type === 'ROUND_END') {
+      dealerTotalCents += toCents(e.dealerNet);
+    }
   });
-  Object.entries(totals).forEach(([n,v])=>{
-    const el=document.createElement("div"); el.className="pill";
-    el.innerHTML=`<strong>${n}:</strong> ${v.toFixed(2)} € <br><small>Kôl: ${rounds[n]}</small>`;
+
+  // Render players pills
+  Object.entries(totals).forEach(([name, cents]) => {
+    const el = document.createElement('div');
+    el.className = 'pill ' + (cents>=0 ? 'positive' : 'negative');
+    el.innerHTML = `
+      <span class="name">${name}:</span> ${(fromCents(cents)).toFixed(2)} €
+      <small>Kôl: ${roundsCountByPlayer[name]}</small>`;
     sumEl.appendChild(el);
   });
+
+  // Render dealer pill (distinct style)
+  const dealerPill = document.createElement('div');
+  dealerPill.className = 'pill dealer';
+  dealerPill.innerHTML = `
+    <span class="name">Dealer:</span> ${(fromCents(dealerTotalCents)).toFixed(2)} €
+    <small>Kôl: ${totalRounds}</small>`;
+  sumEl.prepend(dealerPill);
+
+  // Dealer stats (choice 3 & 4)
+  const dealerRounds = data.filter(e => e.type === 'ROUND_END');
+  let maxGain = null, maxLoss = null;
+  dealerRounds.forEach(r => {
+    const v = toCents(r.dealerNet);
+    if (maxGain === null || v > maxGain) maxGain = v;
+    if (maxLoss === null || v < maxLoss) maxLoss = v;
+  });
+  const statsEl = document.getElementById('dealerStats');
+  if (dealerRounds.length) {
+    const maxGainE = (fromCents(maxGain)).toFixed(2);
+    const maxLossE = (fromCents(maxLoss)).toFixed(2);
+    statsEl.innerHTML = `
+      <strong>📈 Dealer štatistiky:</strong>
+      <br>Najväčší zisk kola: <b>+${maxGainE} €</b>
+      <br>Najväčšia strata kola: <b>${maxLossE} €</b>`;
+  } else {
+    statsEl.textContent = '';
+  }
+
   renderChart(totals);
 }
-function renderChart(totals){
-  const ctx=document.getElementById("chart");
-  const names=Object.keys(totals).filter(n=>n!=="DEALER");
-  const vals=names.map(n=>totals[n]);
-  if(chart)chart.destroy();
-  chart=new Chart(ctx,{
-    type:"bar",
-    data:{ labels:names, datasets:[{label:"Zisk hráča (€)", data:vals, backgroundColor:"#38bdf8", borderRadius:8}]},
-    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+
+function renderChart(totals) {
+  const ctx = document.getElementById('chart');
+  const names = Object.keys(totals);
+  const vals = names.map(n => fromCents(totals[n]));
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{ label: 'Zisk hráča (€)', data: vals, backgroundColor: '#38bdf8', borderRadius: 8 }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
   });
 }
 
-// --- Export / Import CSV ---
-document.getElementById("exportCSV").onclick=()=>{
-  const data=loadData(); if(!data.length)return alert("Žiadne dáta na export!");
-  const header=["date","player","bet","result","playerNet","dealerNet"];
-  const rows=data.map(r=>header.map(h=>JSON.stringify(r[h]??"")).join(","));
-  const csv=[header.join(","),...rows].join("\n");
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}); const url=URL.createObjectURL(blob);
-  const a=document.createElement("a"); a.href=url; a.download="blackjack_data.csv"; a.click(); URL.revokeObjectURL(url);
+// ===== Export / Import CSV =====
+document.getElementById('exportCSV').onclick = () => {
+  const data = loadData(); if (!data.length) return alert('Žiadne dáta na export!');
+  const header = ["type","date","player","bet","result","playerNet","dealerNet"];
+  const rows = data.map(r => header.map(h => JSON.stringify(r[h] ?? "")).join(","));
+  const csv = [header.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'blackjack_data.csv'; a.click(); URL.revokeObjectURL(url);
 };
-document.getElementById("importCSV").onclick=()=>document.getElementById("importFile").click();
-document.getElementById("importFile").addEventListener("change", e=>{
-  const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    try{
-      const lines=ev.target.result.split("\n").filter(l=>l.trim().length>1);
-      const header=lines.shift().split(",").map(h=>h.replace(/"/g,"").trim());
-      const rows=lines.map(l=>{
-        const vals=l.split(",").map(v=>v.replace(/^"|"$/g,""));
-        const obj={};
-        header.forEach((h,i)=>obj[h]=["bet","playerNet","dealerNet"].includes(h)?Number(vals[i]):vals[i]);
+
+document.getElementById('importCSV').onclick = () => document.getElementById('importFile').click();
+document.getElementById('importFile').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim().length > 0);
+      const header = lines.shift().split(",").map(h => h.replace(/"/g, '').trim());
+      const rows = lines.map(l => {
+        const vals = l.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/).map(v => v.replace(/^"|"$/g, ""));
+        const obj = {};
+        header.forEach((h,i) => {
+          if (["bet","playerNet","dealerNet"].includes(h)) obj[h] = vals[i] === '' ? '' : Number(vals[i]);
+          else obj[h] = vals[i];
+        });
         return obj;
       });
-      const existing=loadData();
-      saveData([...existing,...rows]);
+      const existing = loadData();
+      saveData([...existing, ...rows]);
       alert(`✅ Importovaných ${rows.length} záznamov!`);
-      e.target.value="";
-    }catch(err){ console.error(err); alert("❌ Chyba pri importe CSV."); }
+      e.target.value = "";
+    } catch (err) { console.error(err); alert('❌ Chyba pri importe CSV.'); }
   };
   reader.readAsText(file);
 });
 
-// --- Other actions ---
+// ===== App actions =====
 addPlayerRow();
-document.getElementById("addPlayer").onclick=()=>addPlayerRow();
-document.getElementById("saveRound").onclick=()=>{
-  const rows=document.querySelectorAll("#players .player-row");
-  if(!rows.length)return alert("Pridaj aspoň jedného hráča!");
-  const players=Array.from(rows).map(r=>({name:r.querySelector("input[type=text]").value.trim(),bet:r.getBet(),results:r.getResults()}));
-  players.forEach(p=>{if(p.name)lastBets[p.name]=p.bet;});
-  savedPlayers=players.map(p=>p.name).filter(n=>n!=="");
-  const all=loadData(); const newEntries=calculateResults(players); saveData([...all,...newEntries]);
-  document.getElementById("players").innerHTML=""; savedPlayers.forEach(n=>addPlayerRow(n,0,"win"));
-  alert("Kolo uložené ✅ – nové kolo pripravené!");
+document.getElementById('addPlayer').onclick = () => addPlayerRow();
+
+document.getElementById('saveRound').onclick = () => {
+  const rows = document.querySelectorAll('#players .player-row');
+  if (!rows.length) return alert('Pridaj aspoň jedného hráča!');
+  const players = Array.from(rows).map(r => ({
+    name: r.querySelector('input[type=text]').value.trim(),
+    betCents: r.getBetCents(),
+    results: r.getResults()
+  }));
+
+  // store last bets per player
+  players.forEach(p => { if (p.name) lastBets[p.name] = p.betCents; });
+
+  const all = loadData();
+  const newEntries = calculateResults(players);
+  saveData([...all, ...newEntries]);
+
+  // Prepare next round with same names
+  document.getElementById('players').innerHTML = '';
+  players.map(p => p.name).filter(Boolean).forEach(n => addPlayerRow(n, 0, 'win'));
+  alert('Kolo uložené ✅ – nové kolo pripravené!');
 };
-document.getElementById("clearAll").onclick=()=>{
-  if(confirm("Naozaj chceš zmazať všetky záznamy?")){localStorage.removeItem(KEY); render();}
+
+document.getElementById('clearAll').onclick = () => {
+  if (confirm('Naozaj chceš zmazať všetky záznamy?')) { localStorage.removeItem(KEY); render(); }
 };
+
+// Toggle history expand/collapse
+const toggleBtn = document.getElementById('toggleHistory');
+toggleBtn.onclick = () => {
+  historyExpanded = !historyExpanded;
+  toggleBtn.textContent = historyExpanded ? '▲ Skryť históriu' : '▼ Zobraziť celú históriu';
+  render();
+};
+
+// ===== Ambient SFX (option B: toggle button, default OFF) =====
+let ambientCtx = null, ambientNodes = [];
+function startAmbient(){
+  if (ambientCtx) return; // already running
+  ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // pink-ish noise via filtered white noise
+  const bufferSize = 2 * ambientCtx.sampleRate;
+  const noiseBuffer = ambientCtx.createBuffer(1, bufferSize, ambientCtx.sampleRate);
+  const output = noiseBuffer.getChannelData(0);
+  for (let i=0;i<bufferSize;i++){ output[i] = Math.random()*2 - 1; }
+  const white = ambientCtx.createBufferSource(); white.buffer = noiseBuffer; white.loop = true;
+  const biquad = ambientCtx.createBiquadFilter(); biquad.type = 'lowpass'; biquad.frequency.value = 400;
+  const gain = ambientCtx.createGain(); gain.gain.value = 0.03; // very quiet
+  white.connect(biquad).connect(gain).connect(ambientCtx.destination);
+  white.start();
+  ambientNodes = [white, biquad, gain];
+}
+function stopAmbient(){
+  if (!ambientCtx) return;
+  ambientNodes.forEach(n=>{ try{ n.stop?.(); n.disconnect?.(); }catch{} });
+  ambientCtx.close(); ambientCtx = null; ambientNodes = [];
+}
+const ambientBtn = document.getElementById('ambientToggle');
+ambientBtn.onclick = async () => {
+  if (!ambientCtx) { startAmbient(); ambientBtn.textContent = '🎧 Ambient ON'; }
+  else { stopAmbient(); ambientBtn.textContent = '🎧 Ambient OFF'; }
+};
+
+// ===== Fullscreen (K2) =====
+const fsBtn = document.getElementById('fullscreenToggle');
+fsBtn.onclick = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
+};
+
+// ===== Export PDF (P3-ish via print) =====
+document.getElementById('exportPDF').onclick = () => window.print();
+
 render();
 </script>
 </body>
